@@ -33,6 +33,8 @@ ws2812b\main.o: ../Inc/spi.h
 ws2812b\main.o: ../Inc/tim.h
 ws2812b\main.o: ../Inc/usart.h
 ws2812b\main.o: ../Inc/gpio.h
+ws2812b\main.o: ..\MDK-ARM\user.h
 ws2812b\main.o: ../Inc/WS2812B.h
 ws2812b\main.o: D:\RD\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 ws2812b\main.o: D:\RD\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+ws2812b\main.o: D:\RD\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

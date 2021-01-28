@@ -27,8 +27,7 @@
 #include "string.h"
 #include "stdbool.h"
 
-extern uint8_t Usart1_Data[1];
-extern uint8_t Usart2_Data[1];
+extern uint8_t Data[1];
 extern uint8_t RGB_color[3];
 //uint8_t R = 0;
 //uint8_t G = 0;
@@ -36,10 +35,8 @@ extern uint8_t RGB_color[3];
 
 uint8_t LED_MODE = 0;
 
-uint8_t getBuffer[6];
+uint8_t getBuffer[10];
 uint8_t Enter[] = "\r\n";
-const uint8_t Error[] = "fail\r\n";
-const uint8_t Succeed[] = "succeed\r\n";
 uint8_t countOfGetBuffer = 0;
 bool DataStartFlag = false;
 bool DataStopFlag = false;
@@ -91,7 +88,6 @@ Color_Data *color_data;
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_tim1_ch4_trig_com;
 extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -271,84 +267,37 @@ void USART1_IRQHandler(void)
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
 
-    if(Usart1_Data[0] == 0x5B || DataStartFlag)
+    if(Data[0] == 0x5B || DataStartFlag)
     {
-        if(countOfGetBuffer > 6)
+        if(countOfGetBuffer > 10)
         {
             DataStartFlag = false;
             countOfGetBuffer = 0;
-            while(HAL_UART_Transmit(&huart1, (uint8_t*)Error, sizeof(Error), 5000)!= HAL_OK);
         }
         else
         {
-            getBuffer[countOfGetBuffer++] = Usart1_Data[0];
+            getBuffer[countOfGetBuffer++] = Data[0];
             DataStartFlag = true;
         }
     }
        
-    if(Usart1_Data[0] == 0X5D && DataStartFlag)
+    if(Data[0] == 0X5D && DataStartFlag)
     {
-        if(countOfGetBuffer != 6)
-        {
-            DataStartFlag = false;
-            countOfGetBuffer = 0;
-            while(HAL_UART_Transmit(&huart1, (uint8_t*)Error, sizeof(Error), 5000)!= HAL_OK);
-        }
-        else
-        { 
-            color_data = (Color_Data*)getBuffer;
-            LED_MODE = color_data->Mode;
-            RGB_color[0] = color_data->R_Color;
-            RGB_color[1] = color_data->G_Color;
-            RGB_color[2] = color_data->B_Color;
-            DataStartFlag = false;
-            countOfGetBuffer = 0;
-            //memset(getBuffer,0,sizeof(getBuffer));
-            //while(HAL_UART_Transmit(&huart1, (uint8_t*)Succeed, sizeof(Succeed), 5000)!= HAL_OK);
-        }
+        color_data = (Color_Data*)getBuffer;
+//        while(HAL_UART_Transmit(&huart1, (uint8_t*)getBuffer, countOfGetBuffer, 5000)!= HAL_OK);
+//        while(HAL_UART_Transmit(&huart1, (uint8_t*)Enter, sizeof(Enter), 5000)!= HAL_OK);
+        LED_MODE = color_data->Mode;
+        RGB_color[0] = color_data->R_Color;
+        RGB_color[1] = color_data->G_Color;
+        RGB_color[2] = color_data->B_Color;
+        DataStartFlag = false;
+        countOfGetBuffer = 0;
+        //memset(getBuffer,0,sizeof(getBuffer));
     }
-    
-    HAL_UART_Receive_IT(&huart1,Usart1_Data,1);
+    HAL_UART_Receive_IT(&huart1,Data,1);
     
     
   /* USER CODE END USART1_IRQn 1 */
-}
-
-/**
-  * @brief This function handles USART2 global interrupt.
-  */
-void USART2_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART2_IRQn 0 */
- 
-  /* USER CODE END USART2_IRQn 0 */
-  HAL_UART_IRQHandler(&huart2);
-  /* USER CODE BEGIN USART2_IRQn 1 */
-    
-    //HAL_UART_Transmit(&huart1, (uint8_t*)Usart2_Data, sizeof(Usart2_Data), 5000);
-    
-    if(Usart2_Data[0] == 0x5B || DataStartFlag)
-    {
-        getBuffer[countOfGetBuffer++] = Usart2_Data[0];
-        DataStartFlag = true;
-    }
-       
-    if(Usart2_Data[0] == 0X5D && DataStartFlag)
-    {
-            color_data = (Color_Data*)getBuffer;
-            LED_MODE = color_data->Mode;
-            RGB_color[0] = color_data->R_Color;
-            RGB_color[1] = color_data->G_Color;
-            RGB_color[2] = color_data->B_Color;
-            DataStartFlag = false;
-            countOfGetBuffer = 0;
-    }
-    
-    
-    
-    
-    HAL_UART_Receive_IT(&huart2,Usart2_Data,1);
-  /* USER CODE END USART2_IRQn 1 */
 }
 
 /**
@@ -372,7 +321,7 @@ void EXTI15_10_IRQHandler(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     for(int i = 0; i < 65535; i++);
-/*
+
     if((GPIO_Pin == SW2_Pin) && (HAL_GPIO_ReadPin(SW2_GPIO_Port,SW2_Pin) == GPIO_PIN_SET))
     {
         if(LED_MODE < 11)
@@ -383,8 +332,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         if(LED_MODE > 0)            
             LED_MODE--;
     }
-*/
-    while(HAL_UART_Transmit(&huart2, (uint8_t*)"AT\r\n", sizeof("AT\r\n"), 5000)!= HAL_OK);
     __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
 }
 

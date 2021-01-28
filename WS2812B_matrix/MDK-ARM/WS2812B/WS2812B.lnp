@@ -9,6 +9,7 @@
 "ws2812b\usart.o"
 "ws2812b\stm32f1xx_it.o"
 "ws2812b\stm32f1xx_hal_msp.o"
+"ws2812b\user.o"
 "ws2812b\stm32f1xx_hal_gpio_ex.o"
 "ws2812b\stm32f1xx_hal_spi.o"
 "ws2812b\stm32f1xx_hal.o"

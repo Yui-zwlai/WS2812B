@@ -1,7 +1,7 @@
 #include "WS2812B.h"
 
 uint16_t LED_BYTE_Buffer[BUFF_SIZE];
-
+ws2816b_data *data;
 
 /* 呼吸灯曲线表 */
 const uint16_t index_breathing[] = {0, 0, 0, 0, 0, 0, 0, 0,8,8,8,8,8, 9,9,9,9,9, 10, 10, 10,10,10, 11,11, 11, 12, 12, 
@@ -148,6 +148,27 @@ void WS281x_Show(uint16_t send_len)
 #elif MODE_SPI 
     HAL_SPI_Transmit(&hspi3,(uint8_t *)&LED_BYTE_Buffer,send_len,1000);
 #endif
+}
+
+void WS2812_send2(uint8_t *rgb, uint16_t len)
+{
+	uint8_t i;
+	uint32_t memaddr = 0;
+    memset(LED_BYTE_Buffer, 0, BUFF_SIZE); 
+    
+
+    data->start = 0;
+	for(int j = 0; j < 16*16; j++)
+	{
+        for(i=0; i<8; i++) // GREEN data
+        {
+            data->RGB[j].G[i] = ((rgb[GREEN_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+            data->RGB[j].R[i] = ((rgb[RED_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+            data->RGB[j].B[i] = ((rgb[BLUE_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+        }       
+	}
+    data->stop = 0;
+    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,16*16*24+2,1000);
 }
 
 //传参：需要显示的RGB数据和灯的个数

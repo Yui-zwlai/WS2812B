@@ -9,6 +9,7 @@
 #include "stdio.h"
 #include "string.h"
 
+
 #define MODE_PWM_DMA 0
 #define MODE_SPI 1
 
@@ -26,12 +27,27 @@
 #define TIMING_ZERO 0xC0
 #endif
 
-#define BUFF_SIZE (LED_NUM*(GRB_BIT+4))
+#define BUFF_SIZE ((LED_NUM*GRB_BIT)+4)
 
 #define SPEED 10
 
+#pragma pack(4)
+typedef struct 
+{
+    uint16_t start;
+    struct rgb
+    {
+        uint16_t G[8];
+        uint16_t R[8];
+        uint16_t B[8];
+    }RGB[16*16];
+    uint16_t stop;
+}ws2816b_data;
+#pragma pack()
+
 void WS281x_Show(uint16_t send_len);
 void WS2812_send(uint8_t *rgb, uint16_t len);
+void WS2812_send2(uint8_t *rgb, uint16_t len);
 
 void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len);//单颜色单段流水灯
 void WS2812_Multistage_Waterfall_light(uint8_t *rgb,uint16_t len);//单颜色多段流水灯...回推 
