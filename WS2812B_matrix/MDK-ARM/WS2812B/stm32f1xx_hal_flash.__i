@@ -1,0 +1,6 @@
+--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include
+-I.\RTE\_WS2812B
+-ID:\RD\Keil_v5\Arm\Packs\ARM\CMSIS\5.5.1\CMSIS\Core\Include
+-ID:\RD\Keil_v5\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include
+-D__UVISION_VERSION="528" -D_RTE_ -DSTM32F10X_HD -DUSE_HAL_DRIVER -DSTM32F103xE
+-o ws2812b\stm32f1xx_hal_flash.o --omf_browse ws2812b\stm32f1xx_hal_flash.crf --depend ws2812b\stm32f1xx_hal_flash.d "../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash.c"
