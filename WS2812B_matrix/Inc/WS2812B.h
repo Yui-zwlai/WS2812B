@@ -29,9 +29,12 @@
 #define TIMING_ONE  0xFC
 #define TIMING_ZERO 0xC0
 #endif
-#define BUFF_SIZE (LED_NUM*(GRB_BIT+4))
-#define BUFF_SIZE2 ((LED_NUM*GRB_BIT)+4)
 
+#if TYPE_LINE
+#define BUFF_SIZE (LED_NUM*(GRB_BIT+4))
+#elif TYPE_MATRIX
+#define BUFF_SIZE ((LED_NUM*GRB_BIT)+2)
+#endif
 #define SPEED 10
 
 #pragma pack(4)
@@ -49,17 +52,21 @@ typedef struct
 #pragma pack()
 
 void WS2812_Init(void);
+#if TYPE_LINE
 void WS2812_send(uint8_t *rgb, uint16_t len);
-void WS2812_send2(uint8_t *rgb);
+void WS2812_Double_Color_Multistage_Waterfall_light(uint8_t *rgb1,uint8_t *rgb2,uint16_t len);//双色多段流水灯...回推 
+void WS2812_Wave_light(uint8_t *rgb,uint16_t len);//波浪灯
+#elif TYPE_MATRIX
+void WS2812_send(uint8_t *rgb);
+#endif
 
 void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len);//单颜色单段流水灯
 void WS2812_Multistage_Waterfall_light(uint8_t *rgb,uint16_t b_len,uint16_t d_len);//单颜色多段流水灯...回推 
-void WS2812_Double_Color_Multistage_Waterfall_light(uint8_t *rgb1,uint8_t *rgb2,uint16_t len);//双色多段流水灯...回推 
 void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num,uint16_t len);//多彩流水灯
 void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num,uint16_t len);//多彩跳变
 void WS2812_Breathing_light(uint8_t *rgb,uint16_t len);//呼吸灯
 void WS2812_Rainbow_Flow(uint16_t len);//彩虹灯
-void WS2812_Wave_light(uint8_t *rgb,uint16_t len);//波浪灯
+
 
 void WS2812_RGB_GradualChange_Waterfall(uint16_t len);//RGB渐变+流水
 

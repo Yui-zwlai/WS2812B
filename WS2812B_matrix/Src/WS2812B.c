@@ -152,28 +152,7 @@ void WS2812_Init(void)
     data = (ws2816b_data *)malloc(sizeof(ws2816b_data));
 }
 
-void WS2812_send2(uint8_t *rgb)
-{
-	uint8_t i;
-    memset(data, 0, BUFF_SIZE2); 
-    
-
-    data->start = 0;
-	for(int j = 0; j < LED_NUM; j++)
-	{
-        for(i=0; i<8; i++) // GREEN data
-        {
-            data->RGB[j].G[i] = ((rgb[GREEN_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-            data->RGB[j].R[i] = ((rgb[RED_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-            data->RGB[j].B[i] = ((rgb[BLUE_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-        }       
-	}
-    data->stop = 0;
-    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE2,1000);
-}
-
-//传参：需要显示的RGB数据和灯的个数
-//功能：把RGB数据转换成WS2812需要的GRB数据，并按照24bit格式打包给每个灯的数据
+#if TYPE_LINE
 void WS2812_send(uint8_t *rgb, uint16_t len)
 {
 	uint8_t i;
@@ -211,7 +190,6 @@ void WS2812_send(uint8_t *rgb, uint16_t len)
     WS281x_Show(memaddr);
 }
 
-#if TYPE_LINE
 void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len)
 {
 	uint32_t i;
@@ -268,134 +246,6 @@ void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len)
         HAL_Delay(SPEED+50);     
         n++;
     }
-}
-#elif TYPE_MATRIX
-void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len)
-{
-    static int head = 0;
-    static int tail = 0;
-    uint16_t r[8],g[8],b[8];
-    
-    memset(data, 0, BUFF_SIZE2); 
-    
-    for(int i = 0; i < 8; i++)
-    {
-        g[i] = ((rgb[GREEN_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-        r[i] = ((rgb[RED_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-        b[i] = ((rgb[BLUE_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-    }
-    
-    data->start = 0;
-    data->stop = 0;
-    for(int j = 0; j < LED_NUM; j++)
-    {
-        if(j <= head && j >= tail)
-        {
-            for(int i = 0; i < 8; i++)
-            {
-                data->RGB[j].G[i] = g[i];
-                data->RGB[j].R[i] = r[i];
-                data->RGB[j].B[i] = b[i];
-            }
-        }
-        else
-        {
-            for(int i = 0; i < 8; i++)
-            {
-                data->RGB[j].G[i] = TIMING_ZERO;
-                data->RGB[j].R[i] = TIMING_ZERO;
-                data->RGB[j].B[i] = TIMING_ZERO;
-            }
-        }
-    }
-    
-    head++;
-    if(head >= LED_NUM+len)
-        head = 1;
-    if(head >= len)
-        tail = head - len;
-    else
-        tail = 0;
-    
-    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE2,1000);
-    HAL_Delay(SPEED); 
-}
-#endif
-void WS2812_Multistage_Waterfall_light(uint8_t *rgb,uint16_t b_len,uint16_t d_len)
-{
-    static int count = 0;
-    int head;
-    int tail;
-    int bright = b_len;
-    int dark = d_len;
-    int sum = bright + dark;
-
-    uint16_t r[8],g[8],b[8];
-    
-    memset(data, 0, BUFF_SIZE2); 
-    
-    for(int i = 0; i < 8; i++)
-    {
-        g[i] = ((rgb[GREEN_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-        r[i] = ((rgb[RED_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-        b[i] = ((rgb[BLUE_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-    }
-    
-    data->start = 0;
-    data->stop = 0;
-    head = ((count+(bright-1))%sum);
-    tail = (count%sum);
-    
-    for(int j = 0; j < LED_NUM; j++)
-    {
-        if(head > tail)
-            if( j%sum >= tail && j%sum <= head)
-            {
-                for(int i = 0; i < 8; i++)
-                {
-                    data->RGB[j].G[i] = g[i];
-                    data->RGB[j].R[i] = r[i];
-                    data->RGB[j].B[i] = b[i];
-                }
-            }
-            else
-            {
-                for(int i = 0; i < 8; i++)
-                {
-                    data->RGB[j].G[i] = TIMING_ZERO;
-                    data->RGB[j].R[i] = TIMING_ZERO;
-                    data->RGB[j].B[i] = TIMING_ZERO;
-                }
-            }
-        else
-            if( j%sum >= tail || j%sum <= head)
-                {
-                    for(int i = 0; i < 8; i++)
-                    {
-                        data->RGB[j].G[i] = g[i];
-                        data->RGB[j].R[i] = r[i];
-                        data->RGB[j].B[i] = b[i];
-                    }
-                }
-                else
-                {
-                    for(int i = 0; i < 8; i++)
-                    {
-                        data->RGB[j].G[i] = TIMING_ZERO;
-                        data->RGB[j].R[i] = TIMING_ZERO;
-                        data->RGB[j].B[i] = TIMING_ZERO;
-                    }
-                }
-    }
-    
-    count++;
-    if(count == sum)
-    {
-        count = 0;
-    }
-    
-    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE2,1000);
-    HAL_Delay(SPEED+100);
 }
 
 void WS2812_Double_Color_Multistage_Waterfall_light(uint8_t *rgb1,uint8_t *rgb2,uint16_t len)//双色多段流水灯...回推 
@@ -495,191 +345,6 @@ void WS2812_Double_Color_Multistage_Waterfall_light(uint8_t *rgb1,uint8_t *rgb2,
     HAL_Delay(SPEED+100); 
 }
 
-
-void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num,uint16_t len)
-{
-    int i,j,k;
-    int n1,n2;
-    static uint32_t memaddr = 0;
-    memset(LED_BYTE_Buffer, 0, BUFF_SIZE); 
-    
-    n1 = (int)len/(int)color_num;
-    n2 = n1 + (int)len%(int)color_num;
-    
-    for(i = 0; i < color_num-1; i++)
-    {
-        for(k = 0; k < n1; k++)
-        {
-            if(memaddr >= BUFF_SIZE)
-                memaddr = 0;
-            LED_BYTE_Buffer[memaddr]=0;
-            LED_BYTE_Buffer[memaddr+1]=0;
-            LED_BYTE_Buffer[memaddr+2]=0;
-            memaddr += 3;
-            for(j = 0; j < 8; j++)
-            {
-                LED_BYTE_Buffer[memaddr] = ((rgb[i][GREEN_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-                LED_BYTE_Buffer[memaddr+8] = ((rgb[i][RED_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-                LED_BYTE_Buffer[memaddr+16] = ((rgb[i][BLUE_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-                memaddr++;
-            }
-            memaddr = memaddr+16;
-            LED_BYTE_Buffer[memaddr]=0;
-            memaddr++;
-            
-        }
-    }
-    
-    for(k = 0; k < n2; k++)
-    {
-        if(memaddr >= BUFF_SIZE)
-            memaddr = 0;
-        LED_BYTE_Buffer[memaddr]=0;
-        LED_BYTE_Buffer[memaddr+1]=0;
-        LED_BYTE_Buffer[memaddr+2]=0;
-        memaddr += 3;
-        for(j = 0; j < 8; j++)
-        {
-            LED_BYTE_Buffer[memaddr] = ((rgb[i][GREEN_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-            LED_BYTE_Buffer[memaddr+8] = ((rgb[i][RED_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-            LED_BYTE_Buffer[memaddr+16] = ((rgb[i][BLUE_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-            memaddr++;
-        }
-        memaddr = memaddr+16;
-        LED_BYTE_Buffer[memaddr]=0;
-        memaddr++;
-        
-    }
-     
-    WS281x_Show(BUFF_SIZE);
-    if(memaddr >= BUFF_SIZE)
-        memaddr = 0;
-    memaddr += 28;
-    HAL_Delay(SPEED+20);
-}
-
-void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num,uint16_t len)
-{
-    int i,j;
-    static int color_index = 0;
-    static uint8_t count = 0;
-    
-    memset(LED_BYTE_Buffer, 0, BUFF_SIZE);
-    
-    for(i = count; i < len; i++)
-    {
-        if(i%2 == 0)
-        {
-            color_index = color_index%color_num;         
-            LED_BYTE_Buffer[i*28+0] = 0;
-            LED_BYTE_Buffer[i*28+1] = 0;
-            LED_BYTE_Buffer[i*28+2] = 0;
-            for(j = 0; j < 8; j++)
-            {
-                LED_BYTE_Buffer[i*28+j+3] = ((rgb[color_index][GREEN_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-                LED_BYTE_Buffer[i*28+j+8+3] = ((rgb[color_index][RED_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-                LED_BYTE_Buffer[i*28+j+16+3] = ((rgb[color_index][BLUE_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-            }
-            LED_BYTE_Buffer[i*28+27] = 0;
-            color_index++;
-        }
-        else
-        {
-            for(j = 0; j < 28; j++)
-            {
-                switch(j%28)
-                {
-                    case 0:
-                    case 1:
-                    case 2:LED_BYTE_Buffer[i*28+j] = 0;break;
-                    case 27:LED_BYTE_Buffer[i*28+j] = 0;break;
-                    default:LED_BYTE_Buffer[i*28+j] = TIMING_ZERO;break;
-                }  
-            }
-        }
-    }
-    count++;
-    count = count%2;
-    
-   
-    WS281x_Show(BUFF_SIZE);
-    HAL_Delay(SPEED+200);
-}
-
-
-void WS2812_Breathing_light(uint8_t *rgb,uint16_t len)
-{
-    float h,s,v;
-    uint8_t r,g,b;
-    uint8_t nrgb[3] = {0,0,0};
-    static int i = 0;
-    rgb2hsv(rgb[RED_INDEX],rgb[GREEN_INDEX],rgb[BLUE_INDEX],&h,&s,&v);
-    
-        v = index_breathing[i]/256.0;
-        
-        hsv2rgb(h,s,v,&r,&g,&b);
-        nrgb[RED_INDEX] = r;
-        nrgb[GREEN_INDEX] = g;
-        nrgb[BLUE_INDEX] = b;
-        
-        WS2812_send(nrgb,len);
-        HAL_Delay(SPEED);  
-
-    i++;
-    if(i >= (sizeof(index_breathing)/sizeof(uint16_t)))
-        i = 0;    
-}
-
-void WS2812_Rainbow_Flow(uint16_t len)
-{
-    static uint8_t rgb[3] = {0,0,0};
-    static uint8_t mode = 0;
-    
-    if((rgb[GREEN_INDEX] < 255) && !mode)
-    {
-        rgb[GREEN_INDEX]++;
-
-
-    }
-    else if((rgb[RED_INDEX] > 0) && !mode)
-    {
-        rgb[RED_INDEX]--;
-
-
-    }
-    else if((rgb[BLUE_INDEX] < 255) && !mode)
-    {
-        rgb[BLUE_INDEX]++;
-
-
-    }
-    else if((rgb[GREEN_INDEX] > 0) && mode)
-    {
-        rgb[GREEN_INDEX]--;
-        
-
-    }
-    else if((rgb[RED_INDEX] < 255) && mode)
-    {
-        rgb[RED_INDEX]++;
-
-
-    }
-    else if((rgb[BLUE_INDEX] > 0) && mode)
-    {
-        rgb[BLUE_INDEX]--;
-    } 
-    
-    if(rgb[BLUE_INDEX] == 255)
-        mode = 1;
-    if(rgb[BLUE_INDEX] == 0)
-        mode = 0;
-    
-    
-    WS2812_send(rgb,len);
-    HAL_Delay(SPEED);
-}
-
 void WS2812_Wave_light(uint8_t *rgb,uint16_t len)
 {
     int index = 0;
@@ -723,6 +388,316 @@ void WS2812_Wave_light(uint8_t *rgb,uint16_t len)
     WS281x_Show(BUFF_SIZE);
     HAL_Delay(SPEED+50);
 }
+#elif TYPE_MATRIX
+void WS2812_send(uint8_t *rgb)
+{
+	uint8_t i;
+    memset(data, 0, BUFF_SIZE); 
+    
+
+    data->start = 0;
+	for(int j = 0; j < LED_NUM; j++)
+	{
+        for(i=0; i<8; i++) // GREEN data
+        {
+            data->RGB[j].G[i] = ((rgb[GREEN_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+            data->RGB[j].R[i] = ((rgb[RED_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+            data->RGB[j].B[i] = ((rgb[BLUE_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+        }       
+	}
+    data->stop = 0;
+    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
+}
+
+void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len)
+{
+    static int head = 0;
+    static int tail = 0;
+    uint16_t r[8],g[8],b[8];
+    
+    memset(data, 0, BUFF_SIZE); 
+    
+    for(int i = 0; i < 8; i++)
+    {
+        g[i] = ((rgb[GREEN_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+        r[i] = ((rgb[RED_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+        b[i] = ((rgb[BLUE_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+    }
+    
+    data->start = 0;
+    data->stop = 0;
+    for(int j = 0; j < LED_NUM; j++)
+    {
+        if(j <= head && j >= tail)
+        {
+            for(int i = 0; i < 8; i++)
+            {
+                data->RGB[j].G[i] = g[i];
+                data->RGB[j].R[i] = r[i];
+                data->RGB[j].B[i] = b[i];
+            }
+        }
+        else
+        {
+            for(int i = 0; i < 8; i++)
+            {
+                data->RGB[j].G[i] = TIMING_ZERO;
+                data->RGB[j].R[i] = TIMING_ZERO;
+                data->RGB[j].B[i] = TIMING_ZERO;
+            }
+        }
+    }
+    
+    head++;
+    if(head >= LED_NUM+len)
+        head = 1;
+    if(head >= len)
+        tail = head - len;
+    else
+        tail = 0;
+    
+    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
+    HAL_Delay(SPEED); 
+}
+#endif
+
+
+
+void WS2812_Multistage_Waterfall_light(uint8_t *rgb,uint16_t b_len,uint16_t d_len)
+{
+    static int count = 0;
+    int head;
+    int tail;
+    int bright = b_len;
+    int dark = d_len;
+    int sum = bright + dark;
+
+    uint16_t r[8],g[8],b[8];
+    
+    memset(data, 0, BUFF_SIZE); 
+    
+    for(int i = 0; i < 8; i++)
+    {
+        g[i] = ((rgb[GREEN_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+        r[i] = ((rgb[RED_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+        b[i] = ((rgb[BLUE_INDEX]<<i) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+    }
+    
+    data->start = 0;
+    data->stop = 0;
+    head = ((count+(bright-1))%sum);
+    tail = (count%sum);
+    
+    for(int j = 0; j < LED_NUM; j++)
+    {
+        if(head > tail)
+            if( j%sum >= tail && j%sum <= head)
+            {
+                for(int i = 0; i < 8; i++)
+                {
+                    data->RGB[j].G[i] = g[i];
+                    data->RGB[j].R[i] = r[i];
+                    data->RGB[j].B[i] = b[i];
+                }
+            }
+            else
+            {
+                for(int i = 0; i < 8; i++)
+                {
+                    data->RGB[j].G[i] = TIMING_ZERO;
+                    data->RGB[j].R[i] = TIMING_ZERO;
+                    data->RGB[j].B[i] = TIMING_ZERO;
+                }
+            }
+        else
+            if( j%sum >= tail || j%sum <= head)
+                {
+                    for(int i = 0; i < 8; i++)
+                    {
+                        data->RGB[j].G[i] = g[i];
+                        data->RGB[j].R[i] = r[i];
+                        data->RGB[j].B[i] = b[i];
+                    }
+                }
+                else
+                {
+                    for(int i = 0; i < 8; i++)
+                    {
+                        data->RGB[j].G[i] = TIMING_ZERO;
+                        data->RGB[j].R[i] = TIMING_ZERO;
+                        data->RGB[j].B[i] = TIMING_ZERO;
+                    }
+                }
+    }
+    
+    count++;
+    if(count == sum)
+    {
+        count = 0;
+    }
+    
+    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
+    HAL_Delay(SPEED+100);
+}
+
+void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num,uint16_t len)
+{
+    int i,j,k;
+    int n1,n2;
+    static uint32_t memaddr = 0;
+    memset(data, 0, BUFF_SIZE);
+    
+    n1 = (int)len/(int)color_num;
+    n2 = n1 + (int)len%(int)color_num;
+    
+    for(i = 0; i < color_num-1; i++)
+    {
+        for(k = 0; k < n1; k++)
+        {
+            if(memaddr >= len)
+                memaddr = 0;
+            data->start = 0;
+            data->stop = 0;
+            for(j = 0; j < 8; j++)
+            {
+                data->RGB[memaddr].G[j] = ((rgb[i][GREEN_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                data->RGB[memaddr].R[j] = ((rgb[i][RED_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                data->RGB[memaddr].B[j] = ((rgb[i][BLUE_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;              
+            }
+            memaddr++;     
+        }
+    }
+   
+    for(k = 0; k < n2; k++)
+    { 
+        if(memaddr >= len)
+            memaddr = 0;
+        data->start = 0;
+        data->stop = 0;
+        for(j = 0; j < 8; j++)
+        {
+            data->RGB[memaddr].G[j] = ((rgb[i][GREEN_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+            data->RGB[memaddr].R[j] = ((rgb[i][RED_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+            data->RGB[memaddr].B[j] = ((rgb[i][BLUE_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+        }
+        memaddr++;       
+    }
+     
+    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
+
+    if(memaddr >= len)
+    {
+        memaddr = 0;
+    }
+    memaddr++;
+    HAL_Delay(SPEED+20);
+}
+
+void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num,uint16_t len)
+{
+    int i,j;
+    static int color_index = 0;
+    static uint8_t count = 0;
+    
+    memset(data, 0, BUFF_SIZE);
+    
+    for(i = count; i < len; i++)
+    {
+        if(i%2 == 0)
+        {
+            color_index = color_index%color_num;         
+            data->start = 0;
+            data->stop = 0;
+            for(j = 0; j < 8; j++)
+            {
+                data->RGB[i].G[j] = ((rgb[color_index][GREEN_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                data->RGB[i].R[j] = ((rgb[color_index][RED_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                data->RGB[i].B[j] = ((rgb[color_index][BLUE_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+            }
+            color_index++;
+        }
+        else
+        {
+            for(int j = 0; j < 8; j++)
+            {
+                data->RGB[i].G[j] = TIMING_ZERO;
+                data->RGB[i].R[j] = TIMING_ZERO;
+                data->RGB[i].B[j] = TIMING_ZERO;
+            }
+        }
+    }
+    count++;
+    count = count%2;
+    
+   
+    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
+    HAL_Delay(SPEED+200);
+}
+
+
+void WS2812_Breathing_light(uint8_t *rgb,uint16_t len)
+{
+    float h,s,v;
+    uint8_t r,g,b;
+    uint8_t nrgb[3] = {0,0,0};
+    static int i = 0;
+    rgb2hsv(rgb[RED_INDEX],rgb[GREEN_INDEX],rgb[BLUE_INDEX],&h,&s,&v);
+    
+        v = index_breathing[i]/256.0;
+        
+        hsv2rgb(h,s,v,&r,&g,&b);
+        nrgb[RED_INDEX] = r;
+        nrgb[GREEN_INDEX] = g;
+        nrgb[BLUE_INDEX] = b;
+        
+        WS2812_send(nrgb);
+        HAL_Delay(SPEED);  
+
+    i++;
+    if(i >= (sizeof(index_breathing)/sizeof(uint16_t)))
+        i = 0;    
+}
+
+void WS2812_Rainbow_Flow(uint16_t len)
+{
+    static uint8_t rgb[3] = {0,0,0};
+    static uint8_t mode = 0;
+    
+    if((rgb[GREEN_INDEX] < 255) && !mode)
+    {
+        rgb[GREEN_INDEX]++;
+    }
+    else if((rgb[RED_INDEX] > 0) && !mode)
+    {
+        rgb[RED_INDEX]--;
+    }
+    else if((rgb[BLUE_INDEX] < 255) && !mode)
+    {
+        rgb[BLUE_INDEX]++;
+    }
+    else if((rgb[GREEN_INDEX] > 0) && mode)
+    {
+        rgb[GREEN_INDEX]--;
+       
+    }
+    else if((rgb[RED_INDEX] < 255) && mode)
+    {
+        rgb[RED_INDEX]++;
+    }
+    else if((rgb[BLUE_INDEX] > 0) && mode)
+    {
+        rgb[BLUE_INDEX]--;
+    } 
+    
+    if(rgb[BLUE_INDEX] == 255)
+        mode = 1;
+    if(rgb[BLUE_INDEX] == 0)
+        mode = 0;
+    
+    
+    WS2812_send(rgb);
+    HAL_Delay(SPEED);
+}
 
 void WS2812_RGB_GradualChange_Waterfall(uint16_t len)
 {
@@ -740,19 +715,14 @@ void WS2812_RGB_GradualChange_Waterfall(uint16_t len)
     
     for(i = 0; i < len; i++)
     {
-        
-        
-        LED_BYTE_Buffer[i*28+0] = 0;
-        LED_BYTE_Buffer[i*28+1] = 0;
-        LED_BYTE_Buffer[i*28+2] = 0;
+        data->start = 0;
+        data->stop = 0;
         for(int j = 0; j < 8; j++)
         {
-            LED_BYTE_Buffer[i*28+j+3] = ((rgb[GREEN_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-            LED_BYTE_Buffer[i*28+j+3+8] = ((rgb[RED_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
-            LED_BYTE_Buffer[i*28+j+3+16] = ((rgb[BLUE_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+            data->RGB[i].G[j] = ((rgb[GREEN_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+            data->RGB[i].R[j] = ((rgb[RED_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+            data->RGB[i].B[j] = ((rgb[BLUE_INDEX]<<j) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
         }
-        LED_BYTE_Buffer[i*28+27] = 0;
-        
         if((rgb[GREEN_INDEX] < 245) && (!mode))
         {
             rgb[GREEN_INDEX] += 10;
@@ -793,7 +763,6 @@ void WS2812_RGB_GradualChange_Waterfall(uint16_t len)
         }
     }
     
-    WS281x_Show(BUFF_SIZE);
+    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
     HAL_Delay(SPEED);
-    //while(1);
 }

@@ -156,9 +156,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>467</LineNumber>
+          <LineNumber>542</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134228310</Address>
+          <Address>134227320</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -167,7 +167,7 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\Src\WS2812B.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\WS2812B\../Src/WS2812B.c\467</Expression>
+          <Expression>\\WS2812B\../Src/WS2812B.c\542</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -262,6 +262,16 @@
           <count>2</count>
           <WinNumber>2</WinNumber>
           <ItemText>tail,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>3</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>n1</ItemText>
+        </Ww>
+        <Ww>
+          <count>4</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>memaddr,0x0A</ItemText>
         </Ww>
       </WatchWindow2>
       <Tracepoint>
