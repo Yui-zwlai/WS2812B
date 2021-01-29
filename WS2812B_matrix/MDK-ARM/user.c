@@ -23,8 +23,8 @@ extern ws2816b_data *data;
 
 void user_init(void)
 {
-    data = (ws2816b_data *)malloc(sizeof(ws2816b_data));
-    WS2812_send(color_black, 60);
+    WS2812_Init();
+    WS2812_send(color_black, LED_NUM);
     HAL_Delay(SPEED);
     printf("WS2812B_TEST\r\n");
     HAL_UART_Receive_IT(&huart1,Data,1);
@@ -37,10 +37,11 @@ void user_main(void)
     switch(LED_MODE)
     {
     case 0x00:
-        WS2812_send2(RGB_color, LED_NUM);
+        WS2812_Multistage_Waterfall_light(color_red,16,16);break;
+        
     break;
 
-    case 1:WS2812_Wave_light(RGB_color,LED_NUM);break;
+    case 1:WS2812_send2(RGB_color);
     case 2:WS2812_Breathing_light(RGB_color,LED_NUM);break;
     case 3:WS2812_Double_Color_Multistage_Waterfall_light(RGB_color,color_white,LED_NUM);break;
 

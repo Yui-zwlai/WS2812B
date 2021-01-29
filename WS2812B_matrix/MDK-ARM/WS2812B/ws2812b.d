@@ -33,3 +33,4 @@ ws2812b\ws2812b.o: ../Inc/tim.h
 ws2812b\ws2812b.o: ../Inc/spi.h
 ws2812b\ws2812b.o: D:\RD\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 ws2812b\ws2812b.o: D:\RD\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+ws2812b\ws2812b.o: D:\RD\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

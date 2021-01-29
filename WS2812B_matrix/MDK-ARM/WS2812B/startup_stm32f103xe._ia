@@ -1,6 +1,0 @@
---cpu Cortex-M3 -g --apcs=interwork --pd "__MICROLIB SETA 1"
--I.\RTE\_WS2812B
--ID:\RD\Keil_v5\Arm\Packs\ARM\CMSIS\5.5.1\CMSIS\Core\Include
--ID:\RD\Keil_v5\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include
---pd "__UVISION_VERSION SETA 528" --pd "_RTE_ SETA 1" --pd "STM32F10X_HD SETA 1"
---list startup_stm32f103xe.lst --xref -o ws2812b\startup_stm32f103xe.o --depend ws2812b\startup_stm32f103xe.d "startup_stm32f103xe.s"

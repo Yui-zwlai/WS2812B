@@ -8,7 +8,10 @@
 
 #include "stdio.h"
 #include "string.h"
+#include "stdlib.h"
 
+#define TYPE_LINE 0
+#define TYPE_MATRIX 1
 
 #define MODE_PWM_DMA 0
 #define MODE_SPI 1
@@ -26,8 +29,8 @@
 #define TIMING_ONE  0xFC
 #define TIMING_ZERO 0xC0
 #endif
-
-#define BUFF_SIZE ((LED_NUM*GRB_BIT)+4)
+#define BUFF_SIZE (LED_NUM*(GRB_BIT+4))
+#define BUFF_SIZE2 ((LED_NUM*GRB_BIT)+4)
 
 #define SPEED 10
 
@@ -45,12 +48,12 @@ typedef struct
 }ws2816b_data;
 #pragma pack()
 
-void WS281x_Show(uint16_t send_len);
+void WS2812_Init(void);
 void WS2812_send(uint8_t *rgb, uint16_t len);
-void WS2812_send2(uint8_t *rgb, uint16_t len);
+void WS2812_send2(uint8_t *rgb);
 
 void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len);//单颜色单段流水灯
-void WS2812_Multistage_Waterfall_light(uint8_t *rgb,uint16_t len);//单颜色多段流水灯...回推 
+void WS2812_Multistage_Waterfall_light(uint8_t *rgb,uint16_t b_len,uint16_t d_len);//单颜色多段流水灯...回推 
 void WS2812_Double_Color_Multistage_Waterfall_light(uint8_t *rgb1,uint8_t *rgb2,uint16_t len);//双色多段流水灯...回推 
 void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num,uint16_t len);//多彩流水灯
 void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num,uint16_t len);//多彩跳变
