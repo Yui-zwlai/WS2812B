@@ -46,7 +46,7 @@ typedef struct
         uint16_t G[8];
         uint16_t R[8];
         uint16_t B[8];
-    }RGB[16*16];
+    }RGB[LED_NUM];
     uint16_t stop;
 }ws2816b_data;
 #pragma pack()
@@ -62,13 +62,17 @@ void WS2812_send(uint8_t *rgb);
 
 void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len);//单颜色单段流水灯
 void WS2812_Multistage_Waterfall_light(uint8_t *rgb,uint16_t b_len,uint16_t d_len);//单颜色多段流水灯...回推 
-void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num,uint16_t len);//多彩流水灯
-void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num,uint16_t len);//多彩跳变
-void WS2812_Breathing_light(uint8_t *rgb,uint16_t len);//呼吸灯
-void WS2812_Rainbow_Flow(uint16_t len);//彩虹灯
+void WS2812_Breathing_light(uint8_t *rgb);//呼吸灯
+void WS2812_Rainbow_Flow();//彩虹灯
+void WS2812_RGB_GradualChange_Waterfall();//RGB渐变+流水
+
+void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num);//多彩流水灯
+void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num);//多彩跳变
 
 
-void WS2812_RGB_GradualChange_Waterfall(uint16_t len);//RGB渐变+流水
+
+
+
 
 #endif
 

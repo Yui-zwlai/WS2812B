@@ -32,24 +32,17 @@ void user_init(void)
 }
 void user_main(void)
 {
-    
-    
     switch(LED_MODE)
     {
-    case 0x00:    
-        WS2812_send(RGB_color);
-    break;
-
+    case 0x00:WS2812_send(RGB_color);break;
     case 1:WS2812_Waterfall_light(RGB_color,16);break;
     case 2:WS2812_Multistage_Waterfall_light(RGB_color,16,16);break;
-    case 3:WS2812_Breathing_light(RGB_color,LED_NUM);break;
-
-    case 4:WS2812_Rainbow_Flow(LED_NUM);break;
-    case 5:WS2812_RGB_GradualChange_Waterfall(LED_NUM);break;
+    case 3:WS2812_Breathing_light(RGB_color);break;
+    case 4:WS2812_Rainbow_Flow();break;
+    case 5:WS2812_RGB_GradualChange_Waterfall();break;
          
-    case 6:WS2812_Colorful_Jump_light(color,sizeof(color)/sizeof(uint8_t *),LED_NUM);break;
-
-    case 7:WS2812_Colourful_Waterfall_light(color,sizeof(color)/sizeof(uint8_t *),LED_NUM);break;
+    case 6:WS2812_Colorful_Jump_light(color,sizeof(color)/sizeof(uint8_t *));break;
+    case 7:WS2812_Colourful_Waterfall_light(color,sizeof(color)/sizeof(uint8_t *));break;
     } 
 }
 

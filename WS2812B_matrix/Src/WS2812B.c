@@ -138,6 +138,12 @@ static void hsv2rgb(float h, float s, float v, uint8_t *r, uint8_t *g, uint8_t *
     }
 }
 
+void WS2812_Init(void)
+{
+    data = (ws2816b_data *)malloc(sizeof(ws2816b_data));
+}
+
+#if TYPE_LINE
 static void WS281x_Show(uint16_t send_len)
 {
 #if MODE_PWM_DMA
@@ -147,12 +153,6 @@ static void WS281x_Show(uint16_t send_len)
 #endif
 }
 
-void WS2812_Init(void)
-{
-    data = (ws2816b_data *)malloc(sizeof(ws2816b_data));
-}
-
-#if TYPE_LINE
 void WS2812_send(uint8_t *rgb, uint16_t len)
 {
 	uint8_t i;
@@ -389,6 +389,22 @@ void WS2812_Wave_light(uint8_t *rgb,uint16_t len)
     HAL_Delay(SPEED+50);
 }
 #elif TYPE_MATRIX
+static void WS281x_Show(uint16_t send_len)
+{
+#if MODE_PWM_DMA
+    HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_4, (uint32_t *)data, send_len); 
+#elif MODE_SPI 
+    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,send_len,1000);
+#endif
+}
+
+/*********************************************************
+* Function name: WS2812_send
+* Description: 向ws2812发送颜色数据
+* Parameter：
+*   @rgb 对应颜色
+* Return:
+*********************************************************/
 void WS2812_send(uint8_t *rgb)
 {
 	uint8_t i;
@@ -409,6 +425,14 @@ void WS2812_send(uint8_t *rgb)
     HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
 }
 
+/*********************************************************
+* Function name: WS2812_Waterfall_light
+* Description: 流水灯
+* Parameter:
+*   @rgb 对应颜色
+*   @len 流水灯长度
+* Return:
+*********************************************************/
 void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len)
 {
     static int head = 0;
@@ -456,13 +480,20 @@ void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len)
     else
         tail = 0;
     
-    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
+    WS281x_Show(BUFF_SIZE);
     HAL_Delay(SPEED); 
 }
 #endif
 
-
-
+/*********************************************************
+* Function name :WS2812_Multistage_Waterfall_light
+* Description: 多段流水灯
+* Parameter:
+*   @rgb 对应颜色
+*   @b_len 流水灯长度
+*   @d_len 间隔长度
+* Return:
+*********************************************************/
 void WS2812_Multistage_Waterfall_light(uint8_t *rgb,uint16_t b_len,uint16_t d_len)
 {
     static int count = 0;
@@ -536,25 +567,33 @@ void WS2812_Multistage_Waterfall_light(uint8_t *rgb,uint16_t b_len,uint16_t d_le
         count = 0;
     }
     
-    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
+    WS281x_Show(BUFF_SIZE);
     HAL_Delay(SPEED+100);
 }
 
-void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num,uint16_t len)
+/*********************************************************
+* Function name: WS2812_Colourful_Waterfall_light
+* Description: 多彩流水灯
+* Parameter:
+*   @rgb 对应多种颜色
+*   @color_num 颜色数目
+* Return:
+*********************************************************/
+void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num)
 {
     int i,j,k;
     int n1,n2;
     static uint32_t memaddr = 0;
     memset(data, 0, BUFF_SIZE);
     
-    n1 = (int)len/(int)color_num;
-    n2 = n1 + (int)len%(int)color_num;
+    n1 = (int)LED_NUM/(int)color_num;
+    n2 = n1 + (int)LED_NUM%(int)color_num;
     
     for(i = 0; i < color_num-1; i++)
     {
         for(k = 0; k < n1; k++)
         {
-            if(memaddr >= len)
+            if(memaddr >= LED_NUM)
                 memaddr = 0;
             data->start = 0;
             data->stop = 0;
@@ -570,7 +609,7 @@ void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num,uint16_t 
    
     for(k = 0; k < n2; k++)
     { 
-        if(memaddr >= len)
+        if(memaddr >= LED_NUM)
             memaddr = 0;
         data->start = 0;
         data->stop = 0;
@@ -583,9 +622,9 @@ void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num,uint16_t 
         memaddr++;       
     }
      
-    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
+    WS281x_Show(BUFF_SIZE);
 
-    if(memaddr >= len)
+    if(memaddr >= LED_NUM)
     {
         memaddr = 0;
     }
@@ -593,7 +632,15 @@ void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num,uint16_t 
     HAL_Delay(SPEED+20);
 }
 
-void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num,uint16_t len)
+/*********************************************************
+* Function name: WS2812_Colorful_Jump_light
+* Description: 多彩跳变灯
+* Parameter:
+*   @rgb 对应多种颜色
+*   @color_num 颜色数目
+* Return:
+*********************************************************/
+void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num)
 {
     int i,j;
     static int color_index = 0;
@@ -601,7 +648,7 @@ void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num,uint16_t len)
     
     memset(data, 0, BUFF_SIZE);
     
-    for(i = count; i < len; i++)
+    for(i = count; i < LED_NUM; i++)
     {
         if(i%2 == 0)
         {
@@ -630,12 +677,18 @@ void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num,uint16_t len)
     count = count%2;
     
    
-    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
+    WS281x_Show(BUFF_SIZE);
     HAL_Delay(SPEED+200);
 }
 
-
-void WS2812_Breathing_light(uint8_t *rgb,uint16_t len)
+/*********************************************************
+* Function name: WS2812_Breathing_light
+* Description: 单色呼吸灯
+* Parameter：
+*   @rgb 对应颜色
+* Return:
+*********************************************************/
+void WS2812_Breathing_light(uint8_t *rgb)
 {
     float h,s,v;
     uint8_t r,g,b;
@@ -643,22 +696,28 @@ void WS2812_Breathing_light(uint8_t *rgb,uint16_t len)
     static int i = 0;
     rgb2hsv(rgb[RED_INDEX],rgb[GREEN_INDEX],rgb[BLUE_INDEX],&h,&s,&v);
     
-        v = index_breathing[i]/256.0;
-        
-        hsv2rgb(h,s,v,&r,&g,&b);
-        nrgb[RED_INDEX] = r;
-        nrgb[GREEN_INDEX] = g;
-        nrgb[BLUE_INDEX] = b;
-        
-        WS2812_send(nrgb);
-        HAL_Delay(SPEED);  
+    v = index_breathing[i]/256.0;
+    
+    hsv2rgb(h,s,v,&r,&g,&b);
+    nrgb[RED_INDEX] = r;
+    nrgb[GREEN_INDEX] = g;
+    nrgb[BLUE_INDEX] = b;
+    
+    WS2812_send(nrgb);
+    HAL_Delay(SPEED);  
 
     i++;
     if(i >= (sizeof(index_breathing)/sizeof(uint16_t)))
         i = 0;    
 }
 
-void WS2812_Rainbow_Flow(uint16_t len)
+/*********************************************************
+* Function name: WS2812_Breathing_light
+* Description: 彩虹灯
+* Parameter:
+* Return:
+*********************************************************/
+void WS2812_Rainbow_Flow(void)
 {
     static uint8_t rgb[3] = {0,0,0};
     static uint8_t mode = 0;
@@ -699,7 +758,13 @@ void WS2812_Rainbow_Flow(uint16_t len)
     HAL_Delay(SPEED);
 }
 
-void WS2812_RGB_GradualChange_Waterfall(uint16_t len)
+/*********************************************************
+* Function name: WS2812_RGB_GradualChange_Waterfall
+* Description: RGB渐变流水灯
+* Parameter:
+* Return:
+*********************************************************/
+void WS2812_RGB_GradualChange_Waterfall(void)
 {
     static uint16_t r=100,g=100,b=100;
     uint16_t rgb[3] = {0,0,0};
@@ -713,7 +778,7 @@ void WS2812_RGB_GradualChange_Waterfall(uint16_t len)
     rgb[GREEN_INDEX] = g;
     rgb[BLUE_INDEX] = b;
     
-    for(i = 0; i < len; i++)
+    for(i = 0; i < LED_NUM; i++)
     {
         data->start = 0;
         data->stop = 0;
@@ -763,6 +828,6 @@ void WS2812_RGB_GradualChange_Waterfall(uint16_t len)
         }
     }
     
-    HAL_SPI_Transmit(&hspi3,(uint8_t *)data,BUFF_SIZE,1000);
+    WS281x_Show(BUFF_SIZE);
     HAL_Delay(SPEED);
 }
