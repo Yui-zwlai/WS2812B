@@ -16,6 +16,28 @@ const uint16_t index_breathing[] = {0, 0, 0, 0, 0, 0, 0, 0,8,8,8,8,8, 9,9,9,9,9,
 /* 波浪灯曲线表 */
 const uint16_t index_wave[] =  {10,30,50,100,190,256,190,100,50,30,10};
 
+static uint8_t words[] = {
+        0x40,0x01,0x38,0x01,0xE7,0x3F,0x24,0x11,0x24,0x09,0x00,0x10,0x04,0x90,0xF4,0x5F,0x54,0x35,0x54,0x15,0x5F,0x15,0x54,0x15,0x54,0x35,0xF4,0x5F,0x04,0x90,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x40,0x04,0x44,0x24,0x54,0x22,0x54,0x12,0x54,0x15,0xD4,0x48,0x74,0x84,0x5F,0x7F,0x54,0x08,0xD4,0x08,0x54,0x15,0x54,0x12,0x54,0x22,0x44,0x04,0x40,0x04,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x00,0x00,0x00,0xF0,0x0F,0x10,0x04,0x10,0x04,0x10,0x04,0x10,0x04,0xFF,0xFF,0x10,0x04,0x10,0x04,0x10,0x04,0x10,0x04,0xF0,0x0F,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x00,0xFE,0xFF,0x02,0x40,0x12,0x48,0x92,0x48,0x92,0x48,0x92,0x48,0xF2,0x4F,0x92,0x48,0x92,0x4A,0x92,0x4C,0x12,0x48,0x02,0x40,0xFE,0xFF,0x00,0x00,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x20,0x04,0x20,0x04,0x20,0x04,0x20,0x04,0x20,0x04,0x20,0x04,0x20,0xFC,0x3F,0x04,0x20,0x04,0x20,0x04,0x20,0x04,0x20,0x04,0x20,0x04,0x20,0x00,0x20,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x40,0x10,0x40,0x60,0x40,0x80,0x43,0x00,0x40,0xFF,0x7F,0x00,0x40,0x00,0x40,0x00,0x40,0xFF,0x7F,0x00,0x42,0x00,0x41,0xC0,0x40,0x30,0x40,0x00,0x40,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x04,0x04,0x04,0x02,0x04,0x01,0x84,0x00,0xE4,0xFF,0x3C,0x09,0x27,0x09,0x24,0x09,0x24,0x09,0x24,0x49,0x24,0x89,0xE4,0x7F,0x04,0x00,0x04,0x00,0x04,0x00,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x00,0xFE,0xFF,0x22,0x04,0x5A,0x08,0x86,0x07,0x00,0x00,0xFE,0xFF,0x92,0x40,0x92,0x20,0x92,0x03,0x92,0x0C,0x92,0x14,0xFE,0x22,0x00,0x41,0x00,0x40,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x01,0x80,0x00,0x40,0x20,0x20,0x70,0x18,0x28,0x06,0x26,0x80,0x21,0x00,0x20,0x07,0x20,0x18,0x24,0x20,0x38,0x40,0x60,0x80,0x00,0x00,0x01,0x00,0x01,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x00,0x10,0x00,0x12,0x00,0x92,0x3F,0x92,0x10,0x92,0x10,0x92,0x10,0x92,0x10,0x92,0x3F,0x12,0x00,0x12,0x40,0x02,0x80,0xFE,0x7F,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+
 static void delay_us(uint32_t us)
 {
     uint32_t delay = (HAL_RCC_GetHCLKFreq() / 4000000 * us);
@@ -483,6 +505,120 @@ void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len)
     WS281x_Show(BUFF_SIZE);
     HAL_Delay(SPEED); 
 }
+
+/*********************************************************
+* Function name : WS2812_Display_Chinese_Characters
+* Description: 显示汉字
+* Parameter:
+*   @rgb 对应颜色
+* Return:
+*********************************************************/
+void WS2812_Display_Chinese_Characters(uint8_t *rgb)
+{       
+    uint16_t words_index = 0;
+    //uint8_t temp[2];
+    static uint32_t count = 0;
+    int words_size = 0;
+    words_size = sizeof(words)/sizeof(uint8_t);
+    
+    memset(data, 0, BUFF_SIZE);
+        
+     
+       
+    data->start = 0;
+    data->stop = 0;
+    for(int i = 0; i < 16; i++)
+    {
+        if(i%2 == 0)
+        {
+            for(int j = 0; j < 8; j++)
+            {  
+                for(int k = 0; k < 8; k++)
+                {
+                    if(((words[(i*2+count*2)%words_size] >> j) & 0x01))
+                    {
+                        data->RGB[words_index].G[k] = ((rgb[GREEN_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                        data->RGB[words_index].R[k] = ((rgb[RED_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                        data->RGB[words_index].B[k] = ((rgb[BLUE_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;              
+                    }
+                    else
+                    {
+                        data->RGB[words_index].G[k] = TIMING_ZERO;
+                        data->RGB[words_index].R[k] = TIMING_ZERO;
+                        data->RGB[words_index].B[k] = TIMING_ZERO;              
+                    }
+                    if(((words[(i*2+1+count*2)%words_size] >> j) & 0x01))
+                    {
+                        data->RGB[words_index+8].G[k] = ((rgb[GREEN_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                        data->RGB[words_index+8].R[k] = ((rgb[RED_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                        data->RGB[words_index+8].B[k] = ((rgb[BLUE_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;              
+                    }
+                    else
+                    {
+                        data->RGB[words_index+8].G[k] = TIMING_ZERO;
+                        data->RGB[words_index+8].R[k] = TIMING_ZERO;
+                        data->RGB[words_index+8].B[k] = TIMING_ZERO;              
+                    }
+                }
+                words_index++;
+            }
+            words_index += 8;         
+        }
+        else
+        {
+            for(int j = 0; j < 8; j++)
+            {  
+                for(int k = 0; k < 8; k++)
+                {
+                    if(((words[(i*2+1+count*2)%words_size] << j) & 0x80))
+                    {
+                        data->RGB[words_index].G[k] = ((rgb[GREEN_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                        data->RGB[words_index].R[k] = ((rgb[RED_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                        data->RGB[words_index].B[k] = ((rgb[BLUE_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;              
+                    }
+                    else
+                    {
+                        data->RGB[words_index].G[k] = TIMING_ZERO;
+                        data->RGB[words_index].R[k] = TIMING_ZERO;
+                        data->RGB[words_index].B[k] = TIMING_ZERO;              
+                    }
+                    if(((words[(i*2+count*2)%words_size] << j) & 0x80))
+                    {
+                        data->RGB[words_index+8].G[k] = ((rgb[GREEN_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                        data->RGB[words_index+8].R[k] = ((rgb[RED_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;
+                        data->RGB[words_index+8].B[k] = ((rgb[BLUE_INDEX]<<k) & 0x0080) ? TIMING_ONE:TIMING_ZERO;              
+                    }
+                    else
+                    {
+                        data->RGB[words_index+8].G[k] = TIMING_ZERO;
+                        data->RGB[words_index+8].R[k] = TIMING_ZERO;
+                        data->RGB[words_index+8].B[k] = TIMING_ZERO;              
+                    }
+                }
+                words_index++;
+            }
+            words_index += 8;
+        }
+    }
+    
+//    temp[0] = words[0];
+//    temp[1] = words[1];
+//    
+//    for(int i = 0; i < words_size/2-1 ; i++)
+//    {
+//        words[i*2] = words[i*2+2];
+//        words[i*2+1] = words[i*2+3];
+//    }
+//    words[words_size-2] = temp[0];
+//    words[words_size-1] = temp[1];
+    
+    count++;
+    if(count == words_size)
+        count = 0;
+    
+    WS281x_Show(BUFF_SIZE);
+    HAL_Delay(SPEED+100);
+}
 #endif
 
 /*********************************************************
@@ -719,43 +855,45 @@ void WS2812_Breathing_light(uint8_t *rgb)
 *********************************************************/
 void WS2812_Rainbow_Flow(void)
 {
-    static uint8_t rgb[3] = {0,0,0};
-    static uint8_t mode = 0;
+    static uint8_t rgb[3] = {10,0,0};
+    static uint8_t step = 1;
     
-    if((rgb[GREEN_INDEX] < 255) && !mode)
+    switch(step)
     {
-        rgb[GREEN_INDEX]++;
+        case 1:
+            rgb[GREEN_INDEX]++;
+            if(rgb[GREEN_INDEX] == 10)
+                step++;
+            break;
+        case 2:
+            rgb[BLUE_INDEX]++;
+            if(rgb[BLUE_INDEX] == 10)
+                step++;
+            break;
+        case 3:
+            rgb[GREEN_INDEX]--;
+            if(rgb[GREEN_INDEX] == 0)
+                step++;
+            break;
+        case 4:
+            rgb[GREEN_INDEX]++;
+            rgb[RED_INDEX]--;
+            if(rgb[GREEN_INDEX] == 10)
+                step++;
+            break;
+        case 5:
+            rgb[RED_INDEX]++;
+            rgb[GREEN_INDEX]--;
+            rgb[BLUE_INDEX]--;
+            if(rgb[BLUE_INDEX] == 0)
+                step = 1;
+            break;
+        
     }
-    else if((rgb[RED_INDEX] > 0) && !mode)
-    {
-        rgb[RED_INDEX]--;
-    }
-    else if((rgb[BLUE_INDEX] < 255) && !mode)
-    {
-        rgb[BLUE_INDEX]++;
-    }
-    else if((rgb[GREEN_INDEX] > 0) && mode)
-    {
-        rgb[GREEN_INDEX]--;
-       
-    }
-    else if((rgb[RED_INDEX] < 255) && mode)
-    {
-        rgb[RED_INDEX]++;
-    }
-    else if((rgb[BLUE_INDEX] > 0) && mode)
-    {
-        rgb[BLUE_INDEX]--;
-    } 
-    
-    if(rgb[BLUE_INDEX] == 255)
-        mode = 1;
-    if(rgb[BLUE_INDEX] == 0)
-        mode = 0;
     
     
     WS2812_send(rgb);
-    HAL_Delay(SPEED);
+    HAL_Delay(SPEED+30);
 }
 
 /*********************************************************

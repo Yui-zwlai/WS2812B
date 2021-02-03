@@ -54,17 +54,20 @@ typedef struct
 void WS2812_Init(void);
 #if TYPE_LINE
 void WS2812_send(uint8_t *rgb, uint16_t len);
+void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len)
 void WS2812_Double_Color_Multistage_Waterfall_light(uint8_t *rgb1,uint8_t *rgb2,uint16_t len);//双色多段流水灯...回推 
 void WS2812_Wave_light(uint8_t *rgb,uint16_t len);//波浪灯
 #elif TYPE_MATRIX
 void WS2812_send(uint8_t *rgb);
+void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len);//单颜色单段流水灯
+void WS2812_Display_Chinese_Characters(uint8_t *rgb);//显示汉字
 #endif
 
-void WS2812_Waterfall_light(uint8_t *rgb,uint16_t len);//单颜色单段流水灯
+
 void WS2812_Multistage_Waterfall_light(uint8_t *rgb,uint16_t b_len,uint16_t d_len);//单颜色多段流水灯...回推 
 void WS2812_Breathing_light(uint8_t *rgb);//呼吸灯
-void WS2812_Rainbow_Flow();//彩虹灯
-void WS2812_RGB_GradualChange_Waterfall();//RGB渐变+流水
+void WS2812_Rainbow_Flow(void);//彩虹灯
+void WS2812_RGB_GradualChange_Waterfall(void);//RGB渐变+流水
 
 void WS2812_Colourful_Waterfall_light(uint8_t *rgb[],uint8_t color_num);//多彩流水灯
 void WS2812_Colorful_Jump_light(uint8_t *rgb[],uint8_t color_num);//多彩跳变
